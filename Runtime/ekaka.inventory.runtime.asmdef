@@ -2,7 +2,8 @@
     "name": "ekaka.inventory.runtime",
     "rootNamespace": "",
     "references": [
-        "GUID:3be229e312724024eabae057db50ba7f"
+        "GUID:3be229e312724024eabae057db50ba7f",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
