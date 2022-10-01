@@ -12,6 +12,8 @@ namespace Inventory.Main.Item
 
         public IItem Item => item;
 
+        public GameObject Obj => this != null ? gameObject : null;
+
         public void Initialize(IItem iItem)
         {
             item = (TItem) iItem;

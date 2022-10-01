@@ -8,6 +8,8 @@ namespace Inventory.Main.Item
     public interface IItemAdapter
     {
         IItem Item { get; }
+        
+        GameObject Obj { get; }
 
         void Initialize(IItem item);
         

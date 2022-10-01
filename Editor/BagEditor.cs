@@ -16,13 +16,6 @@ namespace Inventory.Editor
 
             if (bag == null) return;
         
-            if (GUILayout.Button(new GUIContent(nameof(Bag), "Opens Bag Window")))
-            {
-                bag.Initialize();
-            
-                BagWindow.Initialize(bag);
-            }
-        
             EditorGUILayout.Space(5f);
 
             int gearSlotCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent(Utils

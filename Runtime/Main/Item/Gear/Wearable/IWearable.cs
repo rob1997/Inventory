@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Inventory.Main.Item
 {
-    public abstract class WearableReference : GearReference
+    public interface IWearable : IGear
     {
-        [field: SerializeField] public WearableSlotType SlotType { get; private set; }
+        WearableSlotType SlotType { get; }
     }
 }

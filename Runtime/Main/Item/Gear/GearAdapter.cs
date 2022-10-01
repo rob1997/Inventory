@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Inventory.Main.Item
 {
-    public abstract class GearAdapter<TItem, TReference> : ItemAdapter<TItem, TReference> 
+    public abstract class GearAdapter<TItem, TReference> : ItemAdapter<TItem, TReference>, IGearAdapter
         where TItem : Gear<TReference> where TReference : GearReference
-    {
+    {   
         public override void Pick(bool picked, string message)
         {
             if (picked)

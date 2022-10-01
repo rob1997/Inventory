@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Inventory.Main.Item;
 using Inventory.Main;
+using Inventory.Main.Slot;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,12 +27,16 @@ namespace Inventory.Editor
     
     private Bag _bag;
     
-    public static void Initialize(Bag bag)
+    private InventoryController _controller;
+    
+    public static void Initialize(InventoryController controller)
     {
         BagWindow window = GetWindow<BagWindow>($"{nameof(Bag)} Window");
 
-        window._bag = bag;
+        window._bag = controller.Bag;
 
+        window._controller = controller;
+        
         window.Show();
     }
     
@@ -131,7 +136,7 @@ namespace Inventory.Editor
             //style for alignment and word wrap long text
             new GUIStyle(EditorStyles.label) {wordWrap = true, alignment = TextAnchor.UpperLeft},
             GUILayout.ExpandHeight(true));
-        
+
         //if supplement
         if (_selected == 1)
         {
@@ -143,11 +148,45 @@ namespace Inventory.Editor
             supplement.Resize(EditorGUILayout.IntSlider(supplement.Count, 0, limit));
         }
         
+        EditorGUILayout.BeginHorizontal();
+        
         EditorGUI.BeginDisabledGroup(true);
 
         EditorGUILayout.ObjectField(reference, typeof(ItemReference), false);
 
         EditorGUI.EndDisabledGroup();
+        
+        //if gear
+        if (_selected == 0)
+        {
+            IGear gear = (IGear) item;
+
+            if (gear.IsEquipped)
+            {
+                if (GUILayout.Button(new GUIContent("UnEquip", "UnEquips Gear")))
+                {
+                    bool unequipped = _controller.UnEquip(gear, out string message);
+                    
+                    if (unequipped) Debug.Log(message);
+
+                    else Debug.LogError(message);
+                }
+            }
+
+            else
+            {
+                if (GUILayout.Button(new GUIContent("Equip", "Equips Gear")))
+                {
+                    bool equipped = _controller.Equip(index, out string message);
+
+                    if (equipped) Debug.Log(message);
+
+                    else Debug.LogError(message);
+                }
+            }
+        }
+        
+        EditorGUILayout.EndHorizontal();
     }
     
     private void Remove(int index)

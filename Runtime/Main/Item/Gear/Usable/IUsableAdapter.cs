@@ -4,12 +4,8 @@ using UnityEngine;
 
 namespace Inventory.Main.Item
 {
-    public interface IGear : IItem
+    public interface IUsableAdapter : IGearAdapter
     {
-        bool IsEquipped { get; }
-
-        void Equip();
         
-        void UnEquip();
     }
 }
