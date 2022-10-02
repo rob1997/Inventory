@@ -14,7 +14,7 @@ namespace Inventory.Main.Item
 
         [SerializeField] [HideInInspector] private string id = Utils.NewGuid();
 
-        public Guid Id
+        public string Id
         {
             get
             {
@@ -25,10 +25,10 @@ namespace Inventory.Main.Item
                     id = Utils.NewGuid();
                 }
 
-                return new Guid(id);
+                return id;
             }
 
-            set => id = value.ToString();
+            set => id = value;
         }
         
         public ItemReference Reference => reference;
@@ -38,7 +38,7 @@ namespace Inventory.Main.Item
             //soft clone/copy...maintain references
             TItem item = (TItem) MemberwiseClone();
             
-            item.Id = new Guid(Utils.NewGuid());
+            item.Id = Utils.NewGuid();
             
             return item;
         }

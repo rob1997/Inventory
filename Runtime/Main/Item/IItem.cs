@@ -7,7 +7,7 @@ namespace Inventory.Main.Item
 {
     public interface IItem
     {
-        Guid Id { get; set; }
+        string Id { get; set; }
         
         ItemReference Reference { get; }
 
