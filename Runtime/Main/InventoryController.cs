@@ -25,7 +25,7 @@ namespace Inventory.Main
         [SerializeField] [HideInInspector]
         private GenericDictionary<WearableSlotType, WearableSlot> wearables = GenericDictionary<WearableSlotType, WearableSlot>
             .ToGenericDictionary(Utils.GetEnumValues<WearableSlotType>().ToDictionary(s => s, s => new WearableSlot()));
-        
+
         [field: SerializeField] public Bag Bag { get; private set; }
         
         private BaseInputActions _input;
@@ -68,6 +68,36 @@ namespace Inventory.Main
         private void Update()
         {
             TryToPick();
+
+            if (Keyboard.current.numpad1Key.wasPressedThisFrame)
+            {
+                Equip((IUsable) Bag.Gears[0]);
+            }
+            
+            else if (Keyboard.current.numpad2Key.wasPressedThisFrame)
+            {
+                Equip((IUsable) Bag.Gears[1]);
+            }
+            
+            else if (Keyboard.current.numpad3Key.wasPressedThisFrame)
+            {
+                Equip((IUsable) Bag.Gears[2]);
+            }
+            
+            else if (Keyboard.current.numpad4Key.wasPressedThisFrame)
+            {
+                UnEquip((IUsable) Bag.Gears[0]);
+            }
+            
+            else if (Keyboard.current.numpad5Key.wasPressedThisFrame)
+            {
+                UnEquip((IUsable) Bag.Gears[1]);
+            }
+            
+            else if (Keyboard.current.numpad6Key.wasPressedThisFrame)
+            {
+                UnEquip((IUsable) Bag.Gears[2]);
+            }
         }
 
         private void TryToPick()
@@ -94,127 +124,25 @@ namespace Inventory.Main
                 }
             }
         }
-
-        #region Equip Item
         
-        public bool Equip(int index, out string message)
+        public void Equip(IUsable usable)
         {
-            IGear gear = Bag.Gears[index];
-
-            if (gear == null)
-            {
-                message = $"Gear Index {index} Empty";
-
-                return false;
-            }
+            UsableSlot slot = usables[usable.SlotType];
             
-            if (gear.IsEquipped)
-            {
-                message = $"{gear.Reference.Title} already Equipped";
-                
-                return false;
-            }
-
-            switch (gear)
-            {
-                case IUsable usable:
-                    return EquipUsable(usable, out message);
-                
-                case IWearable wearable:
-                    return EquipWearable(wearable, out message);
-                
-                default:
-                    message = $"Equip not Implemented for Gear type {gear.GetType()}";
-                    return false;
-            }
-        }
-
-        private bool EquipUsable(IUsable usable, out string message)
-        {
-            UsableSlotType slotType = usable.SlotType;
-
-            UsableSlot slot = Usables[slotType];
-            
-            switch (slotType)
-            {
-                case UsableSlotType.TwoHand:
-
-                    if (!Usables[UsableSlotType.LeftHand].UnEquip(out message)) return false;
-                    
-                    if (!Usables[UsableSlotType.RightHand].UnEquip(out message)) return false;
-                    
-                    break;
-            }
-            
-            return slot.Equip(usable, out message);
+            slot.Switch(usable);
         }
         
-        private bool EquipWearable(IWearable wearable, out string message)
+        public void UnEquip(IUsable usable)
         {
-            WearableSlotType slotType = wearable.SlotType;
+            UsableSlot slot = usables[usable.SlotType];
 
-            WearableSlot slot = Wearables[slotType];
-            
-            return slot.Equip(wearable, out message);
-        }
-
-        #endregion
-
-        #region UnEquip Item
-        
-        public bool UnEquip(int index, out string message)
-        {
-            IGear gear = Bag.Gears[index];
-
-            if (gear == null)
+            //make sure we're unEquipping the same item
+            if (slot.adapter?.Item?.Id == usable.Id)
             {
-                message = $"Gear Index {index} Empty";
-
-                return false;
-            }
-            
-            return UnEquip(gear, out message);
-        }
-
-        public bool UnEquip(IGear gear, out string message)
-        {
-            if (!gear.IsEquipped)
-            {
-                message = $"{gear.Reference.Title} already UnEquipped";
-                
-                return false;
-            }
-            
-            switch (gear)
-            {
-                case IUsable usable:
-                    return UnEquipUsable(usable, out message);
-                
-                case IWearable wearable:
-                    return UnEquipWearable(wearable, out message);
-                
-                default:
-                    message = $"UnEquip not Implemented for Gear type {gear.GetType()}";
-                    return false;
+                slot.Switch(null);
             }
         }
         
-        private bool UnEquipUsable(IUsable usable, out string message)
-        {
-            UsableSlot slot = Usables[usable.SlotType];
-            
-            return slot.UnEquip(out message);
-        }
-
-        private bool UnEquipWearable(IWearable wearable, out string message)
-        {
-            WearableSlot slot = Wearables[wearable.SlotType];
-            
-            return slot.UnEquip(out message);
-        }
-
-        #endregion
-
         #region Drop Item
 
         public void DropGear(int index)

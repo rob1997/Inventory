@@ -69,35 +69,13 @@ public class InventoryControllerEditor : UnityEditor.Editor
 
         UsableSlot slot = pair.Value;
         
-        slot.bone = (Transform) EditorGUILayout.ObjectField(Utils
-            .GetDisplayName(nameof(slot.bone)), slot.bone, typeof(Transform), true);
-
-        if (slot.IsEquipped)
-        {
-            EditorGUILayout.BeginHorizontal();
-            
-            EditorGUI.BeginDisabledGroup(true);
-
-            EditorGUILayout.ObjectField(slot.adapter.Obj, typeof(GameObject), true);
-
-            EditorGUI.EndDisabledGroup();
-            
-            if (GUILayout.Button(new GUIContent("UnEquip", "UnEquips Gear")))
-            {
-                bool unequipped = slot.UnEquip(out string message);
-                
-                if (unequipped) Debug.Log(message);
-
-                else Debug.LogError(message);
-            }
-            
-            EditorGUILayout.EndHorizontal();
-        }
-
-        else
-        {
-            EditorGUILayout.LabelField("Not Equipped");
-        }
+        slot.equipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.equipBone)), slot.equipBone, typeof(Transform), true);
+        
+        EditorGUILayout.Space(1.25f);
+        
+        slot.unEquipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.unEquipBone)), slot.unEquipBone, typeof(Transform), true);
         
         pair.SetValue(slot);
         
@@ -110,35 +88,13 @@ public class InventoryControllerEditor : UnityEditor.Editor
 
         WearableSlot slot = pair.Value;
         
-        slot.bone = (Transform) EditorGUILayout.ObjectField(Utils
-            .GetDisplayName(nameof(slot.bone)), slot.bone, typeof(Transform), true);
-
-        if (slot.IsEquipped)
-        {
-            EditorGUILayout.BeginHorizontal();
-            
-            EditorGUI.BeginDisabledGroup(true);
-
-            EditorGUILayout.ObjectField(slot.adapter.Obj, typeof(GameObject), true);
-
-            EditorGUI.EndDisabledGroup();
-            
-            if (GUILayout.Button(new GUIContent("UnEquip", "UnEquips Gear")))
-            {
-                bool unequipped = slot.UnEquip(out string message);
-                
-                if (unequipped) Debug.Log(message);
-
-                else Debug.LogError(message);
-            }
-            
-            EditorGUILayout.EndHorizontal();
-        }
-
-        else
-        {
-            EditorGUILayout.LabelField("Not Equipped");
-        }
+        slot.equipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.equipBone)), slot.equipBone, typeof(Transform), true);
+        
+        EditorGUILayout.Space(1.25f);
+        
+        slot.unEquipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.unEquipBone)), slot.unEquipBone, typeof(Transform), true);
         
         pair.SetValue(slot);
         

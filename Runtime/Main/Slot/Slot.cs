@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Core.Utils;
 using Inventory.Main.Item;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace Inventory.Main.Slot
@@ -11,64 +12,130 @@ namespace Inventory.Main.Slot
     [Serializable]
     public abstract class Slot<T> : ISerializationCallbackReceiver where T : class, IGearAdapter
     {
-        public Transform bone;
+        public enum SlotState
+        {
+            //false
+            UnEquipped,
+            Equipping,
+            
+            //true
+            Equipped,
+            UnEquipping,
+        }
+        
+        [FormerlySerializedAs("bone")] public Transform equipBone;
+        public Transform unEquipBone;
     
         public T adapter;
 
-        public bool IsEquipped => adapter != null && adapter?.Obj != null;
+        [HideInInspector] public SlotState state;
+
+        [SerializeReference] public Slot<T>[] dependencies;
         
-        public virtual bool Equip(IGear gear, out string message)
+        private IGear _gear;
+
+        public void Switch(IGear gear)
         {
-            if (IsEquipped)
+            _gear = gear;
+
+            if (dependencies != null)
             {
-                if (!UnEquip(out message))
-                {
-                    return false;
-                }
-            }
-            
-            GameObject obj = Object.Instantiate(gear.Reference.Prefab, bone);
-
-            string title = gear.Reference.Title;
-            
-            if (obj.TryGetComponent(out adapter))
-            {
-                adapter.Initialize(gear);
-
-                message = $"Item {title} Equipped";
-
-                gear.Equip();
                 
-                return true;
             }
-
-            obj.Destroy();
-
-            message = $"ItemAdapter Component not found on Item {title} Prefab";
             
-            return false;
+            switch (state)
+            {
+                case SlotState.UnEquipped:
+                    
+                    UnEquipped();
+                    
+                    break;
+                
+                case SlotState.Equipping:
+                    break;
+                
+                case SlotState.Equipped:
+                    
+                    Equipped();
+                    
+                    break;
+                
+                case SlotState.UnEquipping:
+                    break;
+            }
         }
 
-        public virtual bool UnEquip(out string message)
+        private void Equip()
         {
-            if (!IsEquipped)
+            if (_gear == null)
             {
-                message = "Can't UnEquip, Slot already Empty";
-                
-                return false;
+                return;
             }
 
-            IGear gear = (IGear) adapter.Item;
+            //no item/adapter in slot
+            //or
+            //new item is being equipped
+            if (adapter == null || adapter.Item.Id != _gear.Id)
+            {
+                //destroy old
+                if (adapter?.Obj != null) adapter.Obj.Destroy();
+                
+                GameObject obj = Object.Instantiate(_gear.Reference.Prefab, equipBone);
 
-            gear.UnEquip();
+                obj.TryGetComponent(out adapter);
+                
+                adapter.Initialize(_gear);
+
+                adapter.Equipped = delegate
+                {
+                    state = SlotState.Equipped;
+                    
+                    Equipped();
+                };
+                
+                adapter.UnEquipped = delegate
+                {
+                    state = SlotState.UnEquipped;
+                    
+                    UnEquipped();
+                };
+            }
+
+            else
+            {
+                adapter.Obj.transform.SetParent(equipBone);
+            }
+
+            state = SlotState.Equipping;
             
-            adapter.Obj.Destroy();
+            adapter.Equip();
+        }
+        
+        private void Equipped()
+        {
+            if (_gear == null || _gear.Id != adapter.Item.Id)
+            {
+                UnEquip();
+            }
+        }
+
+        private void UnEquip()
+        {
+            state = SlotState.UnEquipping;
             
-            adapter = default;
+            adapter.UnEquip();
+        }
 
-            message = $"Item {gear.Reference.Title} UnEquipped";
-
-            return true;
+        private void UnEquipped()
+        {
+            adapter.Obj.transform.SetParent(unEquipBone);
+            
+            if (_gear == null)
+            {
+                return;
+            }
+                    
+            Equip();
         }
 
         //Serialize adapter value
@@ -78,7 +145,7 @@ namespace Inventory.Main.Slot
         
         public void OnBeforeSerialize()
         {
-            if (IsEquipped)
+            if (adapter?.Obj != null)
             {
                 _value = adapter as Object;
             }

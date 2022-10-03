@@ -148,45 +148,11 @@ namespace Inventory.Editor
             supplement.Resize(EditorGUILayout.IntSlider(supplement.Count, 0, limit));
         }
         
-        EditorGUILayout.BeginHorizontal();
-        
         EditorGUI.BeginDisabledGroup(true);
 
         EditorGUILayout.ObjectField(reference, typeof(ItemReference), false);
 
         EditorGUI.EndDisabledGroup();
-        
-        //if gear
-        if (_selected == 0)
-        {
-            IGear gear = (IGear) item;
-
-            if (gear.IsEquipped)
-            {
-                if (GUILayout.Button(new GUIContent("UnEquip", "UnEquips Gear")))
-                {
-                    bool unequipped = _controller.UnEquip(gear, out string message);
-                    
-                    if (unequipped) Debug.Log(message);
-
-                    else Debug.LogError(message);
-                }
-            }
-
-            else
-            {
-                if (GUILayout.Button(new GUIContent("Equip", "Equips Gear")))
-                {
-                    bool equipped = _controller.Equip(index, out string message);
-
-                    if (equipped) Debug.Log(message);
-
-                    else Debug.LogError(message);
-                }
-            }
-        }
-        
-        EditorGUILayout.EndHorizontal();
     }
     
     private void Remove(int index)

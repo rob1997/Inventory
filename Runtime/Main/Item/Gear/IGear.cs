@@ -6,10 +6,6 @@ namespace Inventory.Main.Item
 {
     public interface IGear : IItem
     {
-        bool IsEquipped { get; }
-
-        void Equip();
         
-        void UnEquip();
     }
 }
