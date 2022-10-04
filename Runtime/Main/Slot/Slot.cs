@@ -24,54 +24,49 @@ namespace Inventory.Main.Slot
         }
         
         [FormerlySerializedAs("bone")] public Transform equipBone;
-        public Transform unEquipBone;
     
         public T adapter;
 
         [HideInInspector] public SlotState state;
-
-        [SerializeReference] public Slot<T>[] dependencies;
         
         private IGear _gear;
 
+        protected IGear Gear => _gear;
+
+        public InventoryController controller;
+        
+        protected void Switch()
+        {
+            Switch(_gear);
+        }
+        
+        //switch to null for unEquip
         public void Switch(IGear gear)
         {
             _gear = gear;
 
-            if (dependencies != null)
-            {
-                
-            }
-            
+            if (_gear != null && !CanSwitch()) return;
+
             switch (state)
             {
                 case SlotState.UnEquipped:
-                    
+                    //already unequipped (avoid circular dependency on usable slots)
+                    if (gear == null) return;
                     UnEquipped();
-                    
-                    break;
-                
-                case SlotState.Equipping:
                     break;
                 
                 case SlotState.Equipped:
-                    
+                    //already equipped with the same item (avoid circular dependency on usable slots)
+                    if (gear != null && gear.Id == adapter?.Item?.Id) return;
                     Equipped();
-                    
-                    break;
-                
-                case SlotState.UnEquipping:
                     break;
             }
         }
 
-        private void Equip()
+        protected abstract bool CanSwitch();
+        
+        protected void Equip()
         {
-            if (_gear == null)
-            {
-                return;
-            }
-
             //no item/adapter in slot
             //or
             //new item is being equipped
@@ -126,17 +121,7 @@ namespace Inventory.Main.Slot
             adapter.UnEquip();
         }
 
-        private void UnEquipped()
-        {
-            adapter.Obj.transform.SetParent(unEquipBone);
-            
-            if (_gear == null)
-            {
-                return;
-            }
-                    
-            Equip();
-        }
+        protected abstract void UnEquipped();
 
         //Serialize adapter value
 #if UNITY_EDITOR

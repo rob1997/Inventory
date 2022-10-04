@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b926975300b1dfa49a3386390ae36012, type: 3}
   m_Name: Bag
   m_EditorClassIdentifier: 
-  supplementSlotCount: 15
-  gearSlotCount: 25
-  limit: 50
-  initialized: 0
+  <SupplementSlotCount>k__BackingField: 15
+  <GearSlotCount>k__BackingField: 25
+  <Limit>k__BackingField: 50
+  <Initialized>k__BackingField: 0
+  <Gears>k__BackingField: []
+  <Supplements>k__BackingField: []
+  references:
+    version: 1

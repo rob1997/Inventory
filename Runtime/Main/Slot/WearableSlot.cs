@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Core.Utils;
 using Inventory.Main.Item;
 using Inventory.Main.Slot;
 using UnityEngine;
@@ -17,9 +18,22 @@ namespace Inventory.Main.Slot
     [Serializable]
     public class WearableSlot : Slot<IWearableAdapter>
     {
-        public WearableSlot()
+        protected override bool CanSwitch()
         {
+            return true;
+        }
+
+        protected override void UnEquipped()
+        {
+            //make sure it's not an already empty slot
+            if (adapter?.Obj != null) adapter.Obj.Destroy();
             
+            if (Gear == null)
+            {
+                return;
+            }
+                    
+            Equip();
         }
     }
 }
