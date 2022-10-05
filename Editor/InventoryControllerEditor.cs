@@ -17,9 +17,16 @@ public class InventoryControllerEditor : UnityEditor.Editor
     private bool _usablesFoldout;
     
     private bool _wearablesFoldout;
+    
+    private Dictionary<UsableSlotType, bool> _dependencyFoldout;
 
     private InventoryController _controller;
-    
+
+    private void OnEnable()
+    {
+        _dependencyFoldout = Utils.GetEnumValues<UsableSlotType>().ToDictionary(u => u, u => false);
+    }
+
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
@@ -74,50 +81,48 @@ public class InventoryControllerEditor : UnityEditor.Editor
         
         if (slot.controller == null) slot.controller = _controller;
         
-        slot.equipBone = (Transform) EditorGUILayout.ObjectField(Utils
-            .GetDisplayName(nameof(slot.equipBone)), slot.equipBone, typeof(Transform), true);
-        
-        EditorGUILayout.Space(1.25f);
-        
-        slot.unEquipBone = (Transform) EditorGUILayout.ObjectField(Utils
-            .GetDisplayName(nameof(slot.unEquipBone)), slot.unEquipBone, typeof(Transform), true);
+        slot.EquipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.EquipBone)), slot.EquipBone, typeof(Transform), true);
 
-        UsableSlotType[] allSlots = Utils.GetEnumValues<UsableSlotType>().Where(e => e != pair.Key).ToArray();
+        slot.UnEquipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.UnEquipBone)), slot.UnEquipBone, typeof(Transform), true);
 
-        UsableSlotType[] dependencies = slot.dependencies;
+        _dependencyFoldout[pair.Key] = EditorGUILayout.Foldout(_dependencyFoldout[pair.Key], 
+            Utils.GetDisplayName(nameof(slot.Dependencies)));
         
-        foreach (var slotType in allSlots)
+        if (_dependencyFoldout[pair.Key])
         {
-            bool hasDependency = dependencies.Contains(slotType);
-            
-            if (EditorGUILayout.Toggle(slotType.ToString(), hasDependency))
-            {
-                if (!hasDependency)
-                {
-                    //Add dependency
-                    slot.dependencies = slot.dependencies.Append(slotType).ToArray();
-                    
-                    //add counterpart dependency
-                    _controller.Usables[slotType].dependencies =
-                        _controller.Usables[slotType].dependencies.Append(pair.Key).ToArray();
-                }
-            }
+            UsableSlotType[] all = Utils.GetEnumValues<UsableSlotType>().Where(e => e != pair.Key).ToArray();
 
-            else
+            UsableSlotType[] dependencies = slot.Dependencies;
+        
+            foreach (var slotType in all)
             {
-                if (hasDependency)
+                bool dependent = dependencies.Contains(slotType);
+            
+                if (EditorGUILayout.Toggle(Utils.GetDisplayName($"{slotType}"), dependent))
                 {
-                    //remove dependency
-                    slot.dependencies = slot.dependencies.Where(d => d != slotType).ToArray();
-                    
-                    //remove counterpart dependency
-                    _controller.Usables[slotType].dependencies =
-                        _controller.Usables[slotType].dependencies.Where(d => d != pair.Key).ToArray();
+                    if (!dependent)
+                    {
+                        //Add dependency
+                        slot.AddDependency(slotType);
+                        //add counterpart dependency
+                        _controller.Usables[slotType].AddDependency(pair.Key);
+                    }
+                }
+
+                else
+                {
+                    if (dependent)
+                    {
+                        //remove dependency
+                        slot.RemoveDependency(slotType);
+                        //remove counterpart dependency
+                        _controller.Usables[slotType].RemoveDependency(pair.Key);
+                    }
                 }
             }
         }
-        
-        //EditorGUILayout.PropertyField(property.FindPropertyRelative(BaseEditor.ValueName).FindPropertyRelative(nameof(UsableSlot.dependencies)));
         
         pair.SetValue(slot);
         
@@ -132,8 +137,8 @@ public class InventoryControllerEditor : UnityEditor.Editor
 
         if (slot.controller == null) slot.controller = _controller;
         
-        slot.equipBone = (Transform) EditorGUILayout.ObjectField(Utils
-            .GetDisplayName(nameof(slot.equipBone)), slot.equipBone, typeof(Transform), true);
+        slot.EquipBone = (Transform) EditorGUILayout.ObjectField(Utils
+            .GetDisplayName(nameof(slot.EquipBone)), slot.EquipBone, typeof(Transform), true);
         
         pair.SetValue(slot);
         

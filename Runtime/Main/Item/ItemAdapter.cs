@@ -21,7 +21,7 @@ namespace Inventory.Main.Item
 
         public void Focus()
         {
-            Debug.Log($"Item {item.Reference.Title} in Focus");
+            Debug.Log($"Item {item.Title} in Focus");
         }
 
         public abstract void Pick(bool added, string message);

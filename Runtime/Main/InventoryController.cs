@@ -14,6 +14,32 @@ namespace Inventory.Main
 {
     public class InventoryController : Controller
     {
+        #region Equipped
+
+        public delegate void Equipped(IItem item);
+
+        public event Equipped OnEquipped;
+
+        public void InvokeEquipped(IItem item)
+        {
+            OnEquipped?.Invoke(item);
+        }
+
+        #endregion
+
+        #region UnEquipped
+
+        public delegate void UnEquipped(IItem item);
+
+        public event UnEquipped OnUnEquipped;
+
+        public void InvokeUnEquipped(IItem item)
+        {
+            OnUnEquipped?.Invoke(item);
+        }
+
+        #endregion
+        
         [SerializeField] private Beamer lookBeamer;
     
         [SerializeField] private float interactRadius = 1.5f;
@@ -71,32 +97,32 @@ namespace Inventory.Main
 
             if (Keyboard.current.numpad1Key.wasPressedThisFrame)
             {
-                Equip((IUsable) Bag.Gears[0]);
+                Equip(0);
             }
             
             else if (Keyboard.current.numpad2Key.wasPressedThisFrame)
             {
-                Equip((IUsable) Bag.Gears[1]);
+                Equip(1);
             }
             
             else if (Keyboard.current.numpad3Key.wasPressedThisFrame)
             {
-                Equip((IUsable) Bag.Gears[2]);
+                Equip(2);
             }
             
             else if (Keyboard.current.numpad4Key.wasPressedThisFrame)
             {
-                UnEquip((IUsable) Bag.Gears[0]);
+                UnEquip(0);
             }
             
             else if (Keyboard.current.numpad5Key.wasPressedThisFrame)
             {
-                UnEquip((IUsable) Bag.Gears[1]);
+                UnEquip(1);
             }
             
             else if (Keyboard.current.numpad6Key.wasPressedThisFrame)
             {
-                UnEquip((IUsable) Bag.Gears[2]);
+                UnEquip(2);
             }
         }
 
@@ -124,24 +150,120 @@ namespace Inventory.Main
                 }
             }
         }
+
+        #region Equip
+
+        public void Equip(int index)
+        {
+            IGear gear = Bag.Gears[index];
+
+            if (gear == null)
+            {
+                Debug.LogError($"Gear Empty at index {index}");
+                
+                return;
+            }
+            
+            switch (gear)
+            {
+                case IUsable usable:
+                    EquipUsable(usable);    
+                    break;
+                
+                case IWearable wearable:
+                    EquipWearable(wearable);
+                    break;
+            }
+        }
         
-        public void Equip(IUsable usable)
+        private void EquipUsable(IUsable usable)
         {
             UsableSlot slot = usables[usable.SlotType];
             
             slot.Switch(usable);
         }
         
-        public void UnEquip(IUsable usable)
+        private void EquipWearable(IWearable wearable)
+        {
+            WearableSlot slot = wearables[wearable.SlotType];
+            
+            slot.Switch(wearable);
+        }
+
+        #endregion
+
+        #region UnEquip
+
+        public void UnEquip(int index)
+        {
+            IGear gear = Bag.Gears[index];
+
+            if (gear == null)
+            {
+                Debug.LogError($"Gear Empty at index {index}");
+                
+                return;
+            }
+            
+            switch (gear)
+            {
+                case IUsable usable:
+                    UnEquipUsable(usable);
+                    break;
+                
+                case IWearable wearable:
+                    UnEquipWearable(wearable);
+                    break;
+            }
+        }
+        
+        private void UnEquipUsable(IUsable usable)
         {
             UsableSlot slot = usables[usable.SlotType];
 
             //make sure we're unEquipping the same item
-            if (slot.adapter?.Item?.Id == usable.Id)
+            if (slot.Adapter?.Item?.Id != usable.Id)
             {
-                slot.Switch(null);
+                Debug.LogError($"{usable.Title} not Equipped on {usable.SlotType}");
+                
+                return;
             }
+            
+            //unEquip
+            slot.Switch(null);
         }
+        
+        private void UnEquipWearable(IWearable wearable)
+        {
+            WearableSlot slot = wearables[wearable.SlotType];
+
+            //make sure we're unEquipping the same item
+            if (slot.Adapter?.Item?.Id != wearable.Id)
+            {
+                Debug.LogError($"{wearable.Title} not Equipped on {wearable.SlotType}");
+                
+                return;
+            }
+            
+            //unEquip
+            slot.Switch(null);
+        }
+
+        public void UnEquipUsableSlot(UsableSlotType slotType)
+        {
+            UsableSlot slot = usables[slotType];
+            
+            slot.Switch(null);
+        }
+        
+        public void UnEquipWearableSlot(WearableSlotType slotType)
+        {
+            WearableSlot slot = wearables[slotType];
+            
+            slot.Switch(null);
+        }
+
+        #endregion
         
         #region Drop Item
 

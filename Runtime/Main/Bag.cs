@@ -52,7 +52,7 @@ namespace Inventory.Main
 
         private bool AddGear(IGear gear, out string message)
         {
-            string title = gear.Reference.Title;
+            string title = gear.Title;
 
             if (IsOverweight(gear.Reference.Weight))
             {
@@ -80,7 +80,7 @@ namespace Inventory.Main
 
         private bool AddSupplement(ISupplement supplement, out string message)
         {
-            string title = supplement.Reference.Title;
+            string title = supplement.Title;
 
             if (IsOverweight(supplement.Reference.Weight))
             {

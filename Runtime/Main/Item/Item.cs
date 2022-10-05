@@ -28,19 +28,21 @@ namespace Inventory.Main.Item
                 return id;
             }
 
-            set => id = value;
+            private set => id = value;
         }
-        
+
+        public string Title => reference.Title;
+
         public ItemReference Reference => reference;
 
         public TItem Clone<TItem>() where TItem : IItem
         {
             //soft clone/copy...maintain references
-            TItem item = (TItem) MemberwiseClone();
+            Item<T> item = (Item<T>) MemberwiseClone();
             
             item.Id = Utils.NewGuid();
             
-            return item;
+            return (TItem) (IItem) item;
         }
     }
 }

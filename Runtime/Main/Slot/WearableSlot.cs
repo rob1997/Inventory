@@ -25,8 +25,12 @@ namespace Inventory.Main.Slot
 
         protected override void UnEquipped()
         {
+            base.UnEquipped();
+            
             //make sure it's not an already empty slot
             if (adapter?.Obj != null) adapter.Obj.Destroy();
+
+            adapter = null;
             
             if (Gear == null)
             {

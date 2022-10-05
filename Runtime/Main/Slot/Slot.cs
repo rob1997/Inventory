@@ -14,40 +14,40 @@ namespace Inventory.Main.Slot
     {
         public enum SlotState
         {
-            //false
+            //isEquipped = false
             UnEquipped,
             Equipping,
             
-            //true
+            //isEquipped = true
             Equipped,
             UnEquipping,
         }
+
+        [SerializeField] protected T adapter;
         
-        [FormerlySerializedAs("bone")] public Transform equipBone;
-    
-        public T adapter;
-
-        [HideInInspector] public SlotState state;
+        [field: SerializeField] public Transform EquipBone { get; set; }
         
-        private IGear _gear;
+        [field: SerializeField] public SlotState State { get; private set; }
 
-        protected IGear Gear => _gear;
+        protected IGear Gear { get; private set; }
 
+        public T Adapter => adapter;
+        
         public InventoryController controller;
         
         protected void Switch()
         {
-            Switch(_gear);
+            Switch(Gear);
         }
         
         //switch to null for unEquip
         public void Switch(IGear gear)
         {
-            _gear = gear;
+            Gear = gear;
 
-            if (_gear != null && !CanSwitch()) return;
+            if (!CanSwitch()) return;
 
-            switch (state)
+            switch (State)
             {
                 case SlotState.UnEquipped:
                     //already unequipped (avoid circular dependency on usable slots)
@@ -70,58 +70,68 @@ namespace Inventory.Main.Slot
             //no item/adapter in slot
             //or
             //new item is being equipped
-            if (adapter == null || adapter.Item.Id != _gear.Id)
+            if (adapter == null || adapter.Item.Id != Gear.Id)
             {
                 //destroy old
                 if (adapter?.Obj != null) adapter.Obj.Destroy();
                 
-                GameObject obj = Object.Instantiate(_gear.Reference.Prefab, equipBone);
+                GameObject obj = Object.Instantiate(Gear.Reference.Prefab, EquipBone);
 
-                obj.TryGetComponent(out adapter);
+                //has no adapter on object
+                //assign adapter too
+                if (!obj.TryGetComponent(out adapter)) Debug.LogError($"Item adapter not Found on {Gear.Title} Prefab");
                 
-                adapter.Initialize(_gear);
+                adapter.Initialize(Gear);
 
+                //assign adapter delegates
                 adapter.Equipped = delegate
                 {
-                    state = SlotState.Equipped;
+                    State = SlotState.Equipped;
                     
                     Equipped();
                 };
                 
                 adapter.UnEquipped = delegate
                 {
-                    state = SlotState.UnEquipped;
+                    State = SlotState.UnEquipped;
                     
                     UnEquipped();
                 };
             }
 
+            //re-equipping from adapter (same item)
             else
             {
-                adapter.Obj.transform.SetParent(equipBone);
+                adapter.Obj.transform.SetParent(EquipBone);
             }
-
-            state = SlotState.Equipping;
+            
+            State = SlotState.Equipping;
             
             adapter.Equip();
         }
         
-        private void Equipped()
+        protected virtual void Equipped()
         {
-            if (_gear == null || _gear.Id != adapter.Item.Id)
+            controller.InvokeEquipped(adapter.Item);
+            
+            //if un-equipping or equipping a different item => un-equip current one
+            if (Gear == null || Gear.Id != adapter.Item.Id)
             {
                 UnEquip();
             }
         }
 
-        private void UnEquip()
+        protected void UnEquip()
         {
-            state = SlotState.UnEquipping;
+            State = SlotState.UnEquipping;
             
             adapter.UnEquip();
         }
 
-        protected abstract void UnEquipped();
+        protected virtual void UnEquipped()
+        {
+            controller.InvokeUnEquipped(adapter.Item);
+        }
 
         //Serialize adapter value
 #if UNITY_EDITOR
