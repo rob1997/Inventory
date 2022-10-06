@@ -130,7 +130,7 @@ namespace Inventory.Main.Slot
 
         protected virtual void UnEquipped()
         {
-            controller.InvokeUnEquipped(adapter.Item);
+            controller.InvokeUnEquipped(adapter?.Item);
         }
 
         //Serialize adapter value

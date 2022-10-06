@@ -95,35 +95,9 @@ namespace Inventory.Main
         {
             TryToPick();
 
-            if (Keyboard.current.numpad1Key.wasPressedThisFrame)
-            {
-                Equip(0);
-            }
-            
-            else if (Keyboard.current.numpad2Key.wasPressedThisFrame)
-            {
-                Equip(1);
-            }
-            
-            else if (Keyboard.current.numpad3Key.wasPressedThisFrame)
-            {
-                Equip(2);
-            }
-            
-            else if (Keyboard.current.numpad4Key.wasPressedThisFrame)
-            {
-                UnEquip(0);
-            }
-            
-            else if (Keyboard.current.numpad5Key.wasPressedThisFrame)
-            {
-                UnEquip(1);
-            }
-            
-            else if (Keyboard.current.numpad6Key.wasPressedThisFrame)
-            {
-                UnEquip(2);
-            }
+#if UNITY_EDITOR
+            DebugSwitch(_input.General.Change.ReadValue<float>() * - 1f);
+#endif
         }
 
         private void TryToPick()
@@ -151,6 +125,55 @@ namespace Inventory.Main
             }
         }
 
+#if UNITY_EDITOR
+
+        private int _inventoryIndex = - 1;
+        
+        /// <summary>
+        /// switch between all Gears in inventory
+        /// scroll to last/first item and keep scrolling to unEquip all
+        /// </summary>
+        /// <param name="direction"></param>
+        private void DebugSwitch(float direction)
+        {
+            int[] indexes = Bag.Gears.FindIndexes(g => g != null);
+            
+            if (direction > 0)
+            {
+                _inventoryIndex += 1;
+
+                int length = indexes.Length;
+                
+                if (_inventoryIndex >= length)
+                {
+                    _inventoryIndex = length;
+                    
+                    UnEquipAll();
+                    
+                    return;
+                }
+                
+                Equip(indexes[indexes[_inventoryIndex]]);
+            }
+
+            else if (direction < 0)
+            {
+                _inventoryIndex -= 1;
+
+                if (_inventoryIndex < 0)
+                {
+                    _inventoryIndex = - 1;
+                    
+                    UnEquipAll();
+                    
+                    return;
+                }
+                
+                Equip(indexes[indexes[_inventoryIndex]]);
+            }
+        }
+#endif
+        
         #region Equip
 
         public void Equip(int index)
@@ -263,6 +286,28 @@ namespace Inventory.Main
             slot.Switch(null);
         }
 
+        public void UnEquipAll()
+        {
+            UnEquipAllUsables();
+            UnEquipAllWearables();
+        }
+        
+        public void UnEquipAllUsables()
+        {
+            foreach (var slot in wearables.Values)
+            {
+                slot.Switch(null);
+            }
+        }
+        
+        public void UnEquipAllWearables()
+        {
+            foreach (var slot in usables.Values)
+            {
+                slot.Switch(null);
+            }
+        }
+        
         #endregion
         
         #region Drop Item
