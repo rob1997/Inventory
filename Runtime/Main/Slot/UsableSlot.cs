@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Character;
+using Core.Utils;
 using Inventory.Main.Item;
 using Inventory.Main.Slot;
 using UnityEngine;
@@ -11,14 +12,27 @@ namespace Inventory.Main.Slot
 {
     public enum UsableSlotType
     {
-        LeftHand,
-        RightHand,
-        TwoHand,
+        LeftHand = 0,
+        RightHand = 1,
+        TwoHand = 2,
     }
     
     [Serializable]
     public class UsableSlot : Slot<IUsableAdapter>
     {
+        #region Animator Hashes
+        
+        public static readonly int EquipLeftHandHash = Animator.StringToHash($"Equip{UsableSlotType.LeftHand}");
+        public static readonly int UnEquipLeftHandHash = Animator.StringToHash($"UnEquip{UsableSlotType.LeftHand}");
+        
+        public static readonly int EquipRightHandHash = Animator.StringToHash($"Equip{UsableSlotType.RightHand}");
+        public static readonly int UnEquipRightHandHash = Animator.StringToHash($"UnEquip{UsableSlotType.RightHand}");
+        
+        public static readonly int EquipTwoHandHash = Animator.StringToHash($"Equip{UsableSlotType.TwoHand}");
+        public static readonly int UnEquipTwoHandHash = Animator.StringToHash($"UnEquip{UsableSlotType.TwoHand}");
+
+        #endregion
+        
         //slots that need to be unEquipped for this to be equipped,
         //twoHanded is a dependency for both right/left hand,
         //right and left hand are dependencies for twoHanded
@@ -63,7 +77,7 @@ namespace Inventory.Main.Slot
             base.UnEquipped();
             
             //make sure it's not an already empty slot
-            if (adapter?.Obj != null) adapter.Obj.transform.SetParent(UnEquipBone);
+            if (adapter?.Obj != null) adapter.Obj.transform.LocalReset(UnEquipBone);
             
             if (Gear == null)
             {
@@ -77,10 +91,17 @@ namespace Inventory.Main.Slot
                 
                 return;
             }
-                    
+            
             Equip();
         }
-        
+
+        public override void StartWith(IUsableAdapter startWithAdapter)
+        {
+            base.StartWith(startWithAdapter);
+            
+            adapter.Obj.transform.LocalReset(UnEquipBone);
+        }
+
         public void AddDependency(UsableSlotType slotType)
         {
             if (Dependencies == null) Dependencies = new UsableSlotType[]{};

@@ -12,7 +12,6 @@ namespace Inventory.Main.Slot
     {
         Head,
         UpperBody,
-        LowerBody,
     }
     
     [Serializable]
@@ -38,6 +37,13 @@ namespace Inventory.Main.Slot
             }
                     
             Equip();
+        }
+
+        public override void StartWith(IWearableAdapter startWithAdapter)
+        {
+            base.StartWith(startWithAdapter);
+            
+            adapter.Obj.transform.LocalReset(EquipBone);
         }
     }
 }

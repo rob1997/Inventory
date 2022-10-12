@@ -151,7 +151,7 @@ namespace Inventory.Editor
         EditorGUI.BeginDisabledGroup(true);
 
         EditorGUILayout.ObjectField(reference, typeof(ItemReference), false);
-
+        
         EditorGUI.EndDisabledGroup();
     }
     

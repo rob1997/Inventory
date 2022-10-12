@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Core.Character;
 using Inventory.Main.Item;
 using UnityEngine;
 
@@ -14,8 +15,10 @@ namespace Inventory.Main.Item
         Equipped Equipped { get; set; }
         
         UnEquipped UnEquipped { get; set; }
+
+        IGear Gear { get; }
         
-        void Equip();
+        void Equip(Character character);
         
         void UnEquip();
     }

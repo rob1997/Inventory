@@ -5,9 +5,11 @@ using System.Linq;
 using Core.Utils;
 using Editor.Core;
 using Inventory.Main;
+using Inventory.Main.Item;
 using Inventory.Main.Slot;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Inventory.Editor
 {
@@ -92,11 +94,11 @@ public class InventoryControllerEditor : UnityEditor.Editor
         
         if (_dependencyFoldout[pair.Key])
         {
-            UsableSlotType[] all = Utils.GetEnumValues<UsableSlotType>().Where(e => e != pair.Key).ToArray();
+            UsableSlotType[] allSlots = Utils.GetEnumValues<UsableSlotType>().Where(e => e != pair.Key).ToArray();
 
             UsableSlotType[] dependencies = slot.Dependencies;
         
-            foreach (var slotType in all)
+            foreach (var slotType in allSlots)
             {
                 bool dependent = dependencies.Contains(slotType);
             
@@ -123,10 +125,83 @@ public class InventoryControllerEditor : UnityEditor.Editor
                 }
             }
         }
+
+        DrawStartWithUsable(ref slot, pair.Key);
+
+        if (slot.Adapter?.Obj != null)
+        {
+            if (GUILayout.Button(new GUIContent("Clear"))) slot.Adapter.Obj.Destroy();
+        }
         
         pair.SetValue(slot);
         
         property.SetValue(pair);
+    }
+
+    private void DrawStartWithUsable(ref UsableSlot slot, UsableSlotType key)
+    {
+        if (_controller.Bag == null)
+        {
+            GameObject obj = (GameObject) EditorGUILayout.ObjectField(new GUIContent("Start With"), 
+                slot.Adapter?.Obj, typeof(GameObject), true);
+
+            if (obj != null && obj != slot.Adapter?.Obj)
+            {
+                //is prefab (not scene object)
+                bool isPrefab = obj.scene.rootCount == 0;
+                
+                if (isPrefab) obj = Instantiate(obj);
+                
+                //is scene object
+                if (obj.TryGetComponent(out IUsableAdapter adapter) && 
+                    //check if slots are similar
+                    ((UsableReference) adapter.Gear.Reference).SlotType == key)
+                {
+                    //clone and initialize
+                    adapter.Initialize(adapter.Item.Clone<IUsable>());
+                    
+                    slot.StartWith(adapter);
+                }
+                
+                else if (isPrefab) obj.Destroy();
+            }
+        }
+
+        else
+        {
+            int[] indexes = _controller.Bag.Gears
+                .FindIndexes(g => g is IUsable && ((UsableReference) g.Reference).SlotType == key);
+
+            string[] options = Array.ConvertAll(indexes, i => $"{i} : {_controller.Bag.Gears[i].Reference.Title}");
+
+            int index = - 1;
+            
+            index = EditorGUILayout.Popup(new GUIContent("Start With"), index, options);
+
+            if (index != - 1)
+            {
+                IUsable usable = (IUsable) _controller.Bag.Gears[indexes[index]];
+
+                GameObject obj = Instantiate(usable.Reference.Prefab);
+                
+                //is scene object
+                if (obj.TryGetComponent(out IUsableAdapter adapter))
+                {
+                    //since it's from bag item is initialized with bag item
+                    adapter.Initialize(usable);
+                    
+                    slot.StartWith(adapter);
+                }
+                
+                else obj.Destroy();
+            }
+            
+            EditorGUI.BeginDisabledGroup(true);
+            
+            EditorGUILayout.ObjectField(slot.Adapter?.Obj, typeof(GameObject), true);
+            
+            EditorGUI.EndDisabledGroup();
+        }
     }
     
     private void DrawWearableSlot(SerializedProperty property)

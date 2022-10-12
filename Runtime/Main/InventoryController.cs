@@ -9,11 +9,41 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Inventory.Main.Item;
 using Inventory.Main.Slot;
+using Locomotion.Controllers;
 
 namespace Inventory.Main
 {
     public class InventoryController : Controller
     {
+        //When UnEquip is Initialized
+        #region UnEquipInitialized
+
+        public delegate void UnEquipInitialized();
+
+        public event UnEquipInitialized OnUnEquipInitialized;
+
+        public void InvokeUnEquipInitialized()
+        {
+            OnUnEquipInitialized?.Invoke();
+        }
+
+        #endregion
+        
+        //When Equip is Initialized
+        #region EquipInitialized
+
+        public delegate void EquipInitialized();
+
+        public event EquipInitialized OnEquipInitialized;
+
+        public void InvokeEquipInitialized()
+        {
+            OnEquipInitialized?.Invoke();
+        }
+
+        #endregion
+        
+        //When Equip is Completed i.e. after animations, logic...
         #region Equipped
 
         public delegate void Equipped(IItem item);
@@ -27,6 +57,7 @@ namespace Inventory.Main
 
         #endregion
 
+        //When UnEquip is Completed i.e. after animations, logic...
         #region UnEquipped
 
         public delegate void UnEquipped(IItem item);
@@ -39,7 +70,7 @@ namespace Inventory.Main
         }
 
         #endregion
-        
+
         [SerializeField] private Beamer lookBeamer;
     
         [SerializeField] private float interactRadius = 1.5f;
@@ -82,21 +113,63 @@ namespace Inventory.Main
             }
 
             _characterTransform = character.transform;
-            
-            if (character.TryGetComponent(out CharacterController controller))
+
+            try
             {
-                _waistLine = controller.height / 2f;
+                _waistLine = character.CharacterController.height / 2f;
+            }
+            
+            catch (Exception _)
+            {
+                _waistLine = 1f;
             }
 
-            else _waistLine = 1f;
+            character.OnEventDispatched += (label, args) =>
+            {
+                switch (label)
+                {
+                    case nameof(Character.Equipped):
+                        usables[(UsableSlotType) (int) args[0]].Adapter?.Equipped.Invoke();
+                        break;
+                    case nameof(Character.UnEquipped):
+                        usables[(UsableSlotType) (int) args[0]].Adapter?.UnEquipped.Invoke();
+                        break;
+                }
+            };
+
+            //UnEquip OnSprint and Stop Sprint when Equip
+            if (character.GetController(out MotionController motionController))
+            {
+                if (motionController.IsInitialized) RegisterUnEquipOnSprint(motionController);
+                
+                else motionController.OnInitialized += delegate { RegisterUnEquipOnSprint(motionController); };
+            }
         }
 
+        //UnEquip OnSprint and Stop Sprint when Equip
+        private void RegisterUnEquipOnSprint(MotionController motionController)
+        {
+            motionController.OnSpeedRateChange += rate =>
+            {
+                if (rate == MotionController.SpeedRate.Sprint) UnEquipAll();
+            };
+            
+            OnEquipInitialized += delegate
+            {
+                if (motionController.Rate == MotionController.SpeedRate.Sprint)
+                {
+                    //switch to Run from Sprint if Equip is initialized (two way)
+                    motionController.ChangeSpeedRate(MotionController.SpeedRate.Run);
+                }
+            };
+        }
+        
         private void Update()
         {
             TryToPick();
-
+            
 #if UNITY_EDITOR
-            DebugSwitch(_input.General.Change.ReadValue<float>() * - 1f);
+            DebugSwitchUsables(_input.General.Change.ReadValue<float>() * - 1f);
 #endif
         }
 
@@ -134,9 +207,10 @@ namespace Inventory.Main
         /// scroll to last/first item and keep scrolling to unEquip all
         /// </summary>
         /// <param name="direction"></param>
-        private void DebugSwitch(float direction)
+        private void DebugSwitchUsables(float direction)
         {
-            int[] indexes = Bag.Gears.FindIndexes(g => g != null);
+            int[] indexes = Bag != null ? Bag.Gears.FindIndexes(g => g is IUsable) : 
+                Utils.GetEnumValues<UsableSlotType>().Cast<int>().ToArray();
             
             if (direction > 0)
             {
@@ -148,12 +222,14 @@ namespace Inventory.Main
                 {
                     _inventoryIndex = length;
                     
-                    UnEquipAll();
+                    UnEquipAllUsables();
                     
                     return;
                 }
                 
-                Equip(indexes[indexes[_inventoryIndex]]);
+                if (Bag != null) Equip(indexes[_inventoryIndex]);
+                
+                else EquipUsableSlot((UsableSlotType) indexes[_inventoryIndex]);
             }
 
             else if (direction < 0)
@@ -164,12 +240,14 @@ namespace Inventory.Main
                 {
                     _inventoryIndex = - 1;
                     
-                    UnEquipAll();
+                    UnEquipAllUsables();
                     
                     return;
                 }
                 
-                Equip(indexes[indexes[_inventoryIndex]]);
+                if (Bag != null) Equip(indexes[_inventoryIndex]);
+                
+                else EquipUsableSlot((UsableSlotType) indexes[_inventoryIndex]);
             }
         }
 #endif
@@ -204,6 +282,14 @@ namespace Inventory.Main
             UsableSlot slot = usables[usable.SlotType];
             
             slot.Switch(usable);
+        }
+        
+        //used for Equipping characters that don't have bags like NPCs
+        private void EquipUsableSlot(UsableSlotType usableSlotType)
+        {
+            UsableSlot slot = usables[usableSlotType];
+            
+            slot.Switch(slot.Adapter?.Gear);
         }
         
         private void EquipWearable(IWearable wearable)
@@ -294,7 +380,7 @@ namespace Inventory.Main
         
         public void UnEquipAllUsables()
         {
-            foreach (var slot in wearables.Values)
+            foreach (var slot in usables.Values)
             {
                 slot.Switch(null);
             }
@@ -302,7 +388,7 @@ namespace Inventory.Main
         
         public void UnEquipAllWearables()
         {
-            foreach (var slot in usables.Values)
+            foreach (var slot in wearables.Values)
             {
                 slot.Switch(null);
             }
@@ -327,7 +413,7 @@ namespace Inventory.Main
 
             if (obj.TryGetComponent(out IItemAdapter adapter))
             {
-                adapter.Initialize(gear);
+                adapter.Initialize(gear, true);
                 
                 Bag.RemoveGear(index);
             }
@@ -362,7 +448,7 @@ namespace Inventory.Main
             
             if (obj.TryGetComponent(out IItemAdapter adapter))
             {
-                adapter.Initialize(supplementCopy);
+                adapter.Initialize(supplementCopy, true);
             }
             
             else Debug.LogError("Can't Initialize, Adapter not found on dropped Object");
@@ -370,9 +456,9 @@ namespace Inventory.Main
 
         private Vector3 GetDropPosition()
         {
-            Vector3 position = _characterTransform.position + _characterTransform.forward * interactRadius;
+            Vector3 position = _characterTransform.position + _characterTransform.forward;
 
-            position += _characterTransform.right * UnityEngine.Random.Range(- interactRadius, interactRadius);
+            position += _characterTransform.right * UnityEngine.Random.Range(- 1f, 1f);
             
             position.y = _waistLine;
 

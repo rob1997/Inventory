@@ -11,7 +11,7 @@ namespace Inventory.Main.Item
         
         GameObject Obj { get; }
 
-        void Initialize(IItem item);
+        void Initialize(IItem item, bool dropped = false);
         
         void Focus();
 

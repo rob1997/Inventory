@@ -62,7 +62,7 @@ namespace Inventory.Main.Slot
                     break;
             }
         }
-
+        
         protected abstract bool CanSwitch();
         
         protected void Equip()
@@ -76,38 +76,58 @@ namespace Inventory.Main.Slot
                 if (adapter?.Obj != null) adapter.Obj.Destroy();
                 
                 GameObject obj = Object.Instantiate(Gear.Reference.Prefab, EquipBone);
-
+                
+                obj.transform.LocalReset();
+                
                 //has no adapter on object
                 //assign adapter too
                 if (!obj.TryGetComponent(out adapter)) Debug.LogError($"Item adapter not Found on {Gear.Title} Prefab");
                 
                 adapter.Initialize(Gear);
 
-                //assign adapter delegates
-                adapter.Equipped = delegate
-                {
-                    State = SlotState.Equipped;
-                    
-                    Equipped();
-                };
+                RegisterEquippedEvent();
                 
-                adapter.UnEquipped = delegate
-                {
-                    State = SlotState.UnEquipped;
-                    
-                    UnEquipped();
-                };
+                RegisterUnEquippedEvent();
             }
 
             //re-equipping from adapter (same item)
             else
             {
-                adapter.Obj.transform.SetParent(EquipBone);
+                adapter.Obj.transform.LocalReset(EquipBone);
+
+                //if it's start with item then we need to reassign events
+                if (adapter.Equipped == null) RegisterEquippedEvent();
+                
+                if (adapter.UnEquipped == null) RegisterUnEquippedEvent();
             }
             
             State = SlotState.Equipping;
             
-            adapter.Equip();
+            controller.InvokeEquipInitialized();
+            
+            adapter.Equip(controller.GetCharacter());
+        }
+
+        private void RegisterEquippedEvent()
+        {
+            //assign adapter delegates
+            adapter.Equipped = delegate
+            {
+                State = SlotState.Equipped;
+                    
+                Equipped();
+            };
+        }
+        
+        private void RegisterUnEquippedEvent()
+        {
+            //assign adapter delegates
+            adapter.UnEquipped = delegate
+            {
+                State = SlotState.UnEquipped;
+                    
+                UnEquipped();
+            };
         }
         
         protected virtual void Equipped()
@@ -125,6 +145,8 @@ namespace Inventory.Main.Slot
         {
             State = SlotState.UnEquipping;
             
+            controller.InvokeUnEquipInitialized();
+            
             adapter.UnEquip();
         }
 
@@ -133,6 +155,18 @@ namespace Inventory.Main.Slot
             controller.InvokeUnEquipped(adapter?.Item);
         }
 
+        public virtual void StartWith(T startWithAdapter)
+        {
+            if (startWithAdapter == null || startWithAdapter.Obj == null) return;
+            
+            //destroy old
+            if (adapter?.Obj != null) adapter.Obj.Destroy();
+
+            adapter = startWithAdapter;
+            
+            Gear = null;
+        }
+        
         //Serialize adapter value
 #if UNITY_EDITOR
         
@@ -150,7 +184,6 @@ namespace Inventory.Main.Slot
         {
             adapter = _value as T;
         }
-        
 #endif
         
     }
