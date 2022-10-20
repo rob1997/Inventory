@@ -6,6 +6,7 @@ using Core.Character;
 using Core.Utils;
 using Inventory.Main.Item;
 using Inventory.Main.Slot;
+using Locomotion.Utils;
 using UnityEngine;
 
 namespace Inventory.Main.Slot
@@ -40,7 +41,11 @@ namespace Inventory.Main.Slot
         [field: SerializeField] public UsableSlotType[] Dependencies { get; private set; }
         
         [field: SerializeField] public Transform UnEquipBone { get; set; }
-
+        
+        [field: SerializeField] public TwoBone TwoBone { get; set; }
+        
+        [field: SerializeField] public LookAt LookAt { get; set; }
+        
         protected override bool CanSwitch()
         {
             bool dependent = CheckDependency();

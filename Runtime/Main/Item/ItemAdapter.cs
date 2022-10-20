@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Core.Character;
 using UnityEngine;
 
 namespace Inventory.Main.Item
@@ -12,6 +13,12 @@ namespace Inventory.Main.Item
 
         private TReference _reference;
 
+        [field: SerializeField] [field: HideInInspector] 
+        public Character Character { get; private set; }
+        
+        [field: SerializeField] [field: HideInInspector] 
+        public bool Initialized { get; private set; }
+        
         protected TReference Reference
         {
             get
@@ -28,20 +35,59 @@ namespace Inventory.Main.Item
 
         public GameObject Obj => this != null ? gameObject : null;
 
-        public void Initialize(IItem iItem, bool dropped = false)
+        public void StartWith(IItem iItem, Character character)
         {
             item = (TItem) iItem;
 
-            if (dropped)
+            Character = character;
+        }
+
+        private void Start()
+        {
+            //dry initialize (works with start with)
+            if (!Initialized && (item != null || Character != null))
             {
-                Collider[] colliders = GetComponents<Collider>();
-
-                foreach (var c in colliders) c.enabled = true;
-
-                if (TryGetComponent(out Rigidbody rBody)) rBody.isKinematic = false;
+                Initialize(item, Character);
             }
         }
 
+        public virtual void Initialize(IItem iItem, Character character)
+        {
+            if (Initialized)
+            {
+                return;
+            }
+
+            else
+            {
+                Initialized = true;
+            }
+            
+            item = (TItem) iItem;
+
+            Character = character;
+
+            if (Character == null) Dropped();
+
+            else
+            {
+                if (Character.IsReady) CharacterReady();
+
+                else Character.OnReady += CharacterReady;
+            }
+        }
+
+        protected abstract void CharacterReady();
+
+        private void Dropped()
+        {
+            Collider[] colliders = GetComponents<Collider>();
+
+            foreach (var c in colliders) c.enabled = true;
+
+            if (TryGetComponent(out Rigidbody rBody)) rBody.isKinematic = false;
+        }
+        
         public void Focus()
         {
             Debug.Log($"Item {item.Title} in Focus");

@@ -15,8 +15,6 @@ namespace Inventory.Main.Item
 
         public IGear Gear => item;
         
-        protected Character Character;
-        
         public override void Pick(bool picked, string message)
         {
             if (picked)
@@ -32,14 +30,12 @@ namespace Inventory.Main.Item
             }
         }
 
-        public virtual void Equip(Character character)
-        {
-            Character = character;
-        }
+        public abstract void Equip();
 
-        public virtual void UnEquip()
-        {
-            
-        }
+        public abstract void UnEquip();
+
+        public abstract void EquippedCallback();
+        
+        public abstract void UnEquippedCallback();
     }
 }

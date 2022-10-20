@@ -1,9 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Inventory.Main.Item;
 using Inventory.Main;
-using Inventory.Main.Slot;
 using UnityEditor;
 using UnityEngine;
 

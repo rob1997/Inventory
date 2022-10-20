@@ -83,11 +83,11 @@ namespace Inventory.Main.Slot
                 //assign adapter too
                 if (!obj.TryGetComponent(out adapter)) Debug.LogError($"Item adapter not Found on {Gear.Title} Prefab");
                 
-                adapter.Initialize(Gear);
+                adapter.Initialize(Gear, controller.GetCharacter());
 
-                RegisterEquippedEvent();
+                RegisterEquippedCallback();
                 
-                RegisterUnEquippedEvent();
+                RegisterUnEquippedCallback();
             }
 
             //re-equipping from adapter (same item)
@@ -96,36 +96,40 @@ namespace Inventory.Main.Slot
                 adapter.Obj.transform.LocalReset(EquipBone);
 
                 //if it's start with item then we need to reassign events
-                if (adapter.Equipped == null) RegisterEquippedEvent();
+                if (adapter.Equipped == null) RegisterEquippedCallback();
                 
-                if (adapter.UnEquipped == null) RegisterUnEquippedEvent();
+                if (adapter.UnEquipped == null) RegisterUnEquippedCallback();
             }
             
             State = SlotState.Equipping;
             
             controller.InvokeEquipInitialized();
             
-            adapter.Equip(controller.GetCharacter());
+            adapter.Equip();
         }
 
-        private void RegisterEquippedEvent()
+        private void RegisterEquippedCallback()
         {
             //assign adapter delegates
-            adapter.Equipped = delegate
+            adapter.Equipped += delegate
             {
                 State = SlotState.Equipped;
                     
+                adapter.EquippedCallback();
+
                 Equipped();
             };
         }
         
-        private void RegisterUnEquippedEvent()
+        private void RegisterUnEquippedCallback()
         {
             //assign adapter delegates
-            adapter.UnEquipped = delegate
+            adapter.UnEquipped += delegate
             {
                 State = SlotState.UnEquipped;
-                    
+               
+                adapter.UnEquippedCallback();
+                
                 UnEquipped();
             };
         }

@@ -6,6 +6,8 @@ namespace Inventory.Main.Item
 {
     public interface IUsableAdapter : IGearAdapter
     {
-        
+        bool CanUse { get; }
+
+        void Use();
     }
 }

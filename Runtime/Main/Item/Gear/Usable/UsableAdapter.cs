@@ -12,13 +12,23 @@ namespace Inventory.Main.Item
     public abstract class UsableAdapter<TItem, TReference> : GearAdapter<TItem, TReference>, IUsableAdapter
         where TItem : Usable<TReference> where TReference : UsableReference
     {
-        private Animator _animator;
+        public abstract bool CanUse { get; protected set; }
         
-        public override void Equip(Character character)
-        {
-            base.Equip(character);
+        private Animator _animator;
 
-            _animator = character.Animator;
+        public virtual void Use()
+        {
+            if (!CanUse) return;
+        }
+
+        protected override void CharacterReady()
+        {
+            _animator = Character.Animator;
+        }
+
+        public override void Equip()
+        {
+            CanUse = false;
             
             _animator.OverrideClips(Reference.ClipOverride);
 
@@ -40,7 +50,7 @@ namespace Inventory.Main.Item
 
         public override void UnEquip()
         {
-            base.UnEquip();
+            CanUse = false;
             
             switch (Reference.SlotType)
             {
@@ -56,6 +66,11 @@ namespace Inventory.Main.Item
                     _animator.SetTrigger(UsableSlot.UnEquipTwoHandHash);
                     break;
             }
+        }
+
+        public override void EquippedCallback()
+        {
+            CanUse = true;
         }
     }
 }

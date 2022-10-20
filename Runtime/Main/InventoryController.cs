@@ -1,19 +1,14 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using Core.Character;
-using Core.Input;
 using Core.Utils;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Inventory.Main.Item;
 using Inventory.Main.Slot;
-using Locomotion.Controllers;
 
 namespace Inventory.Main
 {
-    public class InventoryController : Controller
+    public abstract class InventoryController : Controller
     {
         //When UnEquip is Initialized
         #region UnEquipInitialized
@@ -70,22 +65,18 @@ namespace Inventory.Main
         }
 
         #endregion
-
-        [SerializeField] private Beamer lookBeamer;
     
-        [SerializeField] private float interactRadius = 1.5f;
+        [SerializeField] protected float interactRadius = 1.5f;
         
         [SerializeField] [HideInInspector]
-        private GenericDictionary<UsableSlotType, UsableSlot> usables = GenericDictionary<UsableSlotType, UsableSlot>
+        protected GenericDictionary<UsableSlotType, UsableSlot> usables = GenericDictionary<UsableSlotType, UsableSlot>
             .ToGenericDictionary(Utils.GetEnumValues<UsableSlotType>().ToDictionary(s => s, s => new UsableSlot()));
         
         [SerializeField] [HideInInspector]
-        private GenericDictionary<WearableSlotType, WearableSlot> wearables = GenericDictionary<WearableSlotType, WearableSlot>
+        protected GenericDictionary<WearableSlotType, WearableSlot> wearables = GenericDictionary<WearableSlotType, WearableSlot>
             .ToGenericDictionary(Utils.GetEnumValues<WearableSlotType>().ToDictionary(s => s, s => new WearableSlot()));
 
         [field: SerializeField] public Bag Bag { get; private set; }
-        
-        private BaseInputActions _input;
         
         private Transform _characterTransform;
 
@@ -107,11 +98,6 @@ namespace Inventory.Main
         {
             base.Initialize(character);
 
-            if (GameManager.Instance.GetManager(out InputManager inputManager))
-            {
-                _input = inputManager.InputActions;
-            }
-
             _characterTransform = character.transform;
 
             try
@@ -119,7 +105,7 @@ namespace Inventory.Main
                 _waistLine = character.CharacterController.height / 2f;
             }
             
-            catch (Exception _)
+            catch (Exception )
             {
                 _waistLine = 1f;
             }
@@ -136,121 +122,7 @@ namespace Inventory.Main
                         break;
                 }
             };
-
-            //UnEquip OnSprint and Stop Sprint when Equip
-            if (character.GetController(out MotionController motionController))
-            {
-                if (motionController.IsInitialized) RegisterUnEquipOnSprint(motionController);
-                
-                else motionController.OnInitialized += delegate { RegisterUnEquipOnSprint(motionController); };
-            }
         }
-
-        //UnEquip OnSprint and Stop Sprint when Equip
-        private void RegisterUnEquipOnSprint(MotionController motionController)
-        {
-            motionController.OnSpeedRateChange += rate =>
-            {
-                if (rate == MotionController.SpeedRate.Sprint) UnEquipAll();
-            };
-            
-            OnEquipInitialized += delegate
-            {
-                if (motionController.Rate == MotionController.SpeedRate.Sprint)
-                {
-                    //switch to Run from Sprint if Equip is initialized (two way)
-                    motionController.ChangeSpeedRate(MotionController.SpeedRate.Run);
-                }
-            };
-        }
-        
-        private void Update()
-        {
-            TryToPick();
-            
-#if UNITY_EDITOR
-            DebugSwitchUsables(_input.General.Change.ReadValue<float>() * - 1f);
-#endif
-        }
-
-        private void TryToPick()
-        {
-            RaycastHit[] hits = lookBeamer.Beam();
-        
-            if (hits != null && hits.Length > 0)
-            {
-                RaycastHit hit = hits[0];
-
-                //check if item is out of range
-                if (Vector3.Distance(hit.point, transform.position) > interactRadius) return;
-            
-                if (hit.collider.TryGetComponent(out IItemAdapter adapter))
-                {
-                    adapter.Focus();
-                
-                    if (_input.General.Interact.triggered)
-                    {
-                        bool added = Bag.Add(adapter.Item, out string message);
-                    
-                        adapter.Pick(added, message);
-                    }
-                }
-            }
-        }
-
-#if UNITY_EDITOR
-
-        private int _inventoryIndex = - 1;
-        
-        /// <summary>
-        /// switch between all Gears in inventory
-        /// scroll to last/first item and keep scrolling to unEquip all
-        /// </summary>
-        /// <param name="direction"></param>
-        private void DebugSwitchUsables(float direction)
-        {
-            int[] indexes = Bag != null ? Bag.Gears.FindIndexes(g => g is IUsable) : 
-                Utils.GetEnumValues<UsableSlotType>().Cast<int>().ToArray();
-            
-            if (direction > 0)
-            {
-                _inventoryIndex += 1;
-
-                int length = indexes.Length;
-                
-                if (_inventoryIndex >= length)
-                {
-                    _inventoryIndex = length;
-                    
-                    UnEquipAllUsables();
-                    
-                    return;
-                }
-                
-                if (Bag != null) Equip(indexes[_inventoryIndex]);
-                
-                else EquipUsableSlot((UsableSlotType) indexes[_inventoryIndex]);
-            }
-
-            else if (direction < 0)
-            {
-                _inventoryIndex -= 1;
-
-                if (_inventoryIndex < 0)
-                {
-                    _inventoryIndex = - 1;
-                    
-                    UnEquipAllUsables();
-                    
-                    return;
-                }
-                
-                if (Bag != null) Equip(indexes[_inventoryIndex]);
-                
-                else EquipUsableSlot((UsableSlotType) indexes[_inventoryIndex]);
-            }
-        }
-#endif
         
         #region Equip
 
@@ -285,7 +157,7 @@ namespace Inventory.Main
         }
         
         //used for Equipping characters that don't have bags like NPCs
-        private void EquipUsableSlot(UsableSlotType usableSlotType)
+        protected void EquipUsableSlot(UsableSlotType usableSlotType)
         {
             UsableSlot slot = usables[usableSlotType];
             
@@ -413,7 +285,7 @@ namespace Inventory.Main
 
             if (obj.TryGetComponent(out IItemAdapter adapter))
             {
-                adapter.Initialize(gear, true);
+                adapter.Initialize(gear, null);
                 
                 Bag.RemoveGear(index);
             }
@@ -448,7 +320,7 @@ namespace Inventory.Main
             
             if (obj.TryGetComponent(out IItemAdapter adapter))
             {
-                adapter.Initialize(supplementCopy, true);
+                adapter.Initialize(supplementCopy, null);
             }
             
             else Debug.LogError("Can't Initialize, Adapter not found on dropped Object");

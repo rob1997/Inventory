@@ -2,9 +2,10 @@
     "name": "ekaka.inventory.editor",
     "rootNamespace": "",
     "references": [
-        "GUID:cd8627c69f1c5984188a8a442ca3417c",
         "GUID:3be229e312724024eabae057db50ba7f",
-        "GUID:3f6aa83a8f00ae44197412a21f0d4f7a"
+        "GUID:3f6aa83a8f00ae44197412a21f0d4f7a",
+        "GUID:cd8627c69f1c5984188a8a442ca3417c",
+        "GUID:012bb4514f5348141a5eaaedd5527905"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -18,8 +18,12 @@ namespace Inventory.Main.Item
 
         IGear Gear { get; }
         
-        void Equip(Character character);
+        void Equip();
         
         void UnEquip();
+
+        void EquippedCallback();
+        
+        void UnEquippedCallback();
     }
 }

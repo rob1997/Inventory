@@ -11,6 +11,6 @@
   "category": "Unity",
   "dependencies": {
     "com.ekaka.core": "0.0.1",
-    "com.unity.inputsystem": "1.0.2"
+    "com.ekaka.locomotion": "0.0.1"
   }
 }
