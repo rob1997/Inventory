@@ -29,7 +29,7 @@ namespace Inventory.Main.Slot
         
         [field: SerializeField] public SlotState State { get; private set; }
 
-        protected IGear Gear { get; private set; }
+        public IGear Gear { get; private set; }
 
         public T Adapter => adapter;
         
@@ -77,8 +77,6 @@ namespace Inventory.Main.Slot
                 
                 GameObject obj = Object.Instantiate(Gear.Reference.Prefab, EquipBone);
                 
-                obj.transform.LocalReset();
-                
                 //has no adapter on object
                 //assign adapter too
                 if (!obj.TryGetComponent(out adapter)) Debug.LogError($"Item adapter not Found on {Gear.Title} Prefab");
@@ -86,6 +84,8 @@ namespace Inventory.Main.Slot
                 adapter.Initialize(Gear, controller.GetCharacter());
 
                 RegisterEquippedCallback();
+                
+                obj.transform.LocalReset();
                 
                 RegisterUnEquippedCallback();
             }
@@ -103,7 +103,7 @@ namespace Inventory.Main.Slot
             
             State = SlotState.Equipping;
             
-            controller.InvokeEquipInitialized();
+            controller.InvokeEquipInitialized(adapter.Gear);
             
             adapter.Equip();
         }
@@ -136,7 +136,7 @@ namespace Inventory.Main.Slot
         
         protected virtual void Equipped()
         {
-            controller.InvokeEquipped(adapter.Item);
+            controller.InvokeEquipped(adapter.Gear);
             
             //if un-equipping or equipping a different item => un-equip current one
             if (Gear == null || Gear.Id != adapter.Item.Id)
@@ -149,14 +149,14 @@ namespace Inventory.Main.Slot
         {
             State = SlotState.UnEquipping;
             
-            controller.InvokeUnEquipInitialized();
+            controller.InvokeUnEquipInitialized(adapter.Gear);
             
             adapter.UnEquip();
         }
 
         protected virtual void UnEquipped()
         {
-            controller.InvokeUnEquipped(adapter?.Item);
+            controller.InvokeUnEquipped(adapter?.Gear);
         }
 
         public virtual void StartWith(T startWithAdapter)

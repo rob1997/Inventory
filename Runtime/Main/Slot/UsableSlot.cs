@@ -2,11 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Character;
 using Core.Utils;
 using Inventory.Main.Item;
-using Inventory.Main.Slot;
-using Locomotion.Utils;
 using UnityEngine;
 
 namespace Inventory.Main.Slot
@@ -41,10 +38,6 @@ namespace Inventory.Main.Slot
         [field: SerializeField] public UsableSlotType[] Dependencies { get; private set; }
         
         [field: SerializeField] public Transform UnEquipBone { get; set; }
-        
-        [field: SerializeField] public TwoBone TwoBone { get; set; }
-        
-        [field: SerializeField] public LookAt LookAt { get; set; }
         
         protected override bool CanSwitch()
         {
@@ -82,7 +75,13 @@ namespace Inventory.Main.Slot
             base.UnEquipped();
             
             //make sure it's not an already empty slot
-            if (adapter?.Obj != null) adapter.Obj.transform.LocalReset(UnEquipBone);
+            if (adapter?.Obj != null)
+            {
+                adapter.Obj.transform.SetParent(UnEquipBone);
+                
+                adapter.Obj.transform.localPosition = adapter.Holster.localPosition;
+                adapter.Obj.transform.localRotation = adapter.Holster.localRotation;
+            }
             
             if (Gear == null)
             {

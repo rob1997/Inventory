@@ -1,10 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using Core.Character;
 using Core.Utils;
 using Inventory.Main.Slot;
-using Locomotion.Utils;
 using UnityEngine;
 
 namespace Inventory.Main.Item
@@ -14,6 +11,8 @@ namespace Inventory.Main.Item
     {
         public abstract bool CanUse { get; protected set; }
         
+        [field: SerializeField] public Transform Holster { get; protected set; }
+
         private Animator _animator;
 
         public virtual void Use()
@@ -24,6 +23,8 @@ namespace Inventory.Main.Item
         protected override void CharacterReady()
         {
             _animator = Character.Animator;
+
+            transform.SetLocalPositionAndRotation(Holster.localPosition, Holster.localRotation);
         }
 
         public override void Equip()

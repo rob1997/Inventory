@@ -7,6 +7,8 @@ namespace Inventory.Main.Item
     public interface IUsableAdapter : IGearAdapter
     {
         bool CanUse { get; }
+        
+        Transform Holster { get; }
 
         void Use();
     }

@@ -135,14 +135,6 @@ namespace Inventory.Editor
 
             EditorGUILayout.Space();
 
-            slot.TwoBone = (TwoBone) EditorGUILayout.ObjectField(Utils.GetDisplayName(nameof(slot.TwoBone)),
-                slot.TwoBone, typeof(TwoBone), true);
-
-            slot.LookAt = (LookAt) EditorGUILayout.ObjectField(Utils.GetDisplayName(nameof(slot.LookAt)), slot.LookAt,
-                typeof(LookAt), true);
-
-            EditorGUILayout.Space();
-
             DrawStartWithUsable(ref slot, pair.Key);
 
             if (slot.Adapter?.Obj != null)

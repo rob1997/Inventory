@@ -13,13 +13,13 @@ namespace Inventory.Main
         //When UnEquip is Initialized
         #region UnEquipInitialized
 
-        public delegate void UnEquipInitialized();
+        public delegate void UnEquipInitialized(IGear gear);
 
         public event UnEquipInitialized OnUnEquipInitialized;
 
-        public void InvokeUnEquipInitialized()
+        public void InvokeUnEquipInitialized(IGear gear)
         {
-            OnUnEquipInitialized?.Invoke();
+            OnUnEquipInitialized?.Invoke(gear);
         }
 
         #endregion
@@ -27,13 +27,13 @@ namespace Inventory.Main
         //When Equip is Initialized
         #region EquipInitialized
 
-        public delegate void EquipInitialized();
+        public delegate void EquipInitialized(IGear gear);
 
         public event EquipInitialized OnEquipInitialized;
 
-        public void InvokeEquipInitialized()
+        public void InvokeEquipInitialized(IGear gear)
         {
-            OnEquipInitialized?.Invoke();
+            OnEquipInitialized?.Invoke(gear);
         }
 
         #endregion
@@ -41,13 +41,13 @@ namespace Inventory.Main
         //When Equip is Completed i.e. after animations, logic...
         #region Equipped
 
-        public delegate void Equipped(IItem item);
+        public delegate void Equipped(IGear gear);
 
         public event Equipped OnEquipped;
 
-        public void InvokeEquipped(IItem item)
+        public void InvokeEquipped(IGear gear)
         {
-            OnEquipped?.Invoke(item);
+            OnEquipped?.Invoke(gear);
         }
 
         #endregion
@@ -55,13 +55,13 @@ namespace Inventory.Main
         //When UnEquip is Completed i.e. after animations, logic...
         #region UnEquipped
 
-        public delegate void UnEquipped(IItem item);
+        public delegate void UnEquipped(IGear gear);
 
         public event UnEquipped OnUnEquipped;
 
-        public void InvokeUnEquipped(IItem item)
+        public void InvokeUnEquipped(IGear gear)
         {
-            OnUnEquipped?.Invoke(item);
+            OnUnEquipped?.Invoke(gear);
         }
 
         #endregion
