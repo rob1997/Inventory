@@ -338,5 +338,41 @@ namespace Inventory.Main
         }
 
         #endregion
+
+        #region Use | Stop
+
+        public bool TryUse(UsableSlotType slotType, UsageType usageType = UsageType.Primary)
+        {
+            UsableSlot slot = usables[slotType];
+
+            if (!slot.IsEquipped) return false;
+
+            if (slot.Adapter == null || !slot.Adapter.CanUse[usageType])
+            {
+                return false;
+            }
+
+            slot.Adapter.Use(usageType);
+
+            return true;
+        }
+        
+        public bool TryStop(UsableSlotType slotType, UsageType usageType = UsageType.Primary)
+        {
+            UsableSlot slot = usables[slotType];
+
+            if (!slot.IsEquipped) return false;
+
+            if (slot.Adapter == null || slot.Adapter.CanUse[usageType])
+            {
+                return false;
+            }
+
+            slot.Adapter.Stop(usageType);
+
+            return true;
+        }
+
+        #endregion
     }
 }

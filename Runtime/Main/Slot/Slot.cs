@@ -30,6 +30,8 @@ namespace Inventory.Main.Slot
         [field: SerializeField] public SlotState State { get; private set; }
 
         public IGear Gear { get; private set; }
+        
+        public bool IsEquipped => State == SlotState.Equipped;
 
         public T Adapter => adapter;
         

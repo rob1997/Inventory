@@ -60,9 +60,7 @@ namespace Inventory.Editor
 
             if (!_usablesFoldout) return;
 
-            var usables = _controller.Usables;
-
-            BaseEditor.DrawEnumDict(usableDictProperty, ref usables, DrawUsableSlot);
+            BaseEditor.DrawEnumDict<UsableSlotType, UsableSlot>(usableDictProperty, DrawUsableSlot);
         }
 
         private void DrawWearableDict()
@@ -73,9 +71,7 @@ namespace Inventory.Editor
 
             if (!_wearablesFoldout) return;
 
-            var wearables = _controller.Wearables;
-
-            BaseEditor.DrawEnumDict(wearableDictProperty, ref wearables, DrawWearableSlot);
+            BaseEditor.DrawEnumDict<WearableSlotType, WearableSlot>(wearableDictProperty, DrawWearableSlot);
         }
 
         private void DrawUsableSlot(SerializedProperty property)
