@@ -9,6 +9,8 @@ namespace Inventory.Main.Item
     public abstract class GearAdapter<TItem, TReference> : ItemAdapter<TItem, TReference>, IGearAdapter
         where TItem : Gear<TReference> where TReference : GearReference
     {
+        public bool IsEquipped { get; protected set; }
+        
         public Equipped Equipped { get; set; }
         
         public UnEquipped UnEquipped { get; set; }
@@ -32,9 +34,15 @@ namespace Inventory.Main.Item
 
         public abstract void Equip();
 
-        public abstract void UnEquip();
+        public virtual void UnEquip()
+        {
+            IsEquipped = false;
+        }
 
-        public abstract void EquippedCallback();
+        public virtual void EquippedCallback()
+        {
+            IsEquipped = true;
+        }
         
         public abstract void UnEquippedCallback();
     }

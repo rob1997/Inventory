@@ -12,6 +12,8 @@ namespace Inventory.Main.Item
     
     public interface IGearAdapter : IItemAdapter
     {
+        bool IsEquipped { get; }
+        
         Equipped Equipped { get; set; }
         
         UnEquipped UnEquipped { get; set; }
