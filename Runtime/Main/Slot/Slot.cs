@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace Inventory.Main.Slot
 {
     [Serializable]
-    public abstract class Slot<T> : ISerializationCallbackReceiver where T : class, IGearAdapter
+    public abstract class Slot<T> where T : class, IGearAdapter
     {
         public enum SlotState
         {
@@ -172,25 +172,5 @@ namespace Inventory.Main.Slot
             
             Gear = null;
         }
-        
-        //Serialize adapter value
-#if UNITY_EDITOR
-        
-        [SerializeField] private Object _value;
-        
-        public void OnBeforeSerialize()
-        {
-            if (adapter?.Obj != null)
-            {
-                _value = adapter as Object;
-            }
-        }
-        
-        public void OnAfterDeserialize()
-        {
-            adapter = _value as T;
-        }
-#endif
-        
     }
 }

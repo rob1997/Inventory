@@ -68,12 +68,10 @@ namespace Inventory.Main
     
         [SerializeField] protected float interactRadius = 1.5f;
         
-        [SerializeField] [HideInInspector]
-        protected GenericDictionary<UsableSlotType, UsableSlot> usables = GenericDictionary<UsableSlotType, UsableSlot>
+        [HideInInspector] public GenericDictionary<UsableSlotType, UsableSlot> Usables = GenericDictionary<UsableSlotType, UsableSlot>
             .ToGenericDictionary(Utils.GetEnumValues<UsableSlotType>().ToDictionary(s => s, s => new UsableSlot()));
         
-        [SerializeField] [HideInInspector]
-        protected GenericDictionary<WearableSlotType, WearableSlot> wearables = GenericDictionary<WearableSlotType, WearableSlot>
+        [HideInInspector] public GenericDictionary<WearableSlotType, WearableSlot> Wearables = GenericDictionary<WearableSlotType, WearableSlot>
             .ToGenericDictionary(Utils.GetEnumValues<WearableSlotType>().ToDictionary(s => s, s => new WearableSlot()));
 
         [field: SerializeField] public Bag Bag { get; private set; }
@@ -82,16 +80,12 @@ namespace Inventory.Main
 
         //height of character from the waist
         private float _waistLine;
-        
-        public GenericDictionary<UsableSlotType, UsableSlot> Usables => usables;
-        
-        public GenericDictionary<WearableSlotType, WearableSlot> Wearables => wearables;
 
 #if UNITY_EDITOR
         //used for editor scripting / finding private properties
-        public const string UsableName = nameof(usables);
+        public const string UsableName = nameof(Usables);
         
-        public const string WearableName = nameof(wearables);
+        public const string WearableName = nameof(Wearables);
 #endif
         
         public override void Initialize(Character character)
@@ -115,10 +109,10 @@ namespace Inventory.Main
                 switch (label)
                 {
                     case nameof(Character.Equipped):
-                        usables[(UsableSlotType) (int) args[0]].Adapter?.Equipped.Invoke();
+                        Usables[(UsableSlotType) (int) args[0]].Adapter?.Equipped.Invoke();
                         break;
                     case nameof(Character.UnEquipped):
-                        usables[(UsableSlotType) (int) args[0]].Adapter?.UnEquipped.Invoke();
+                        Usables[(UsableSlotType) (int) args[0]].Adapter?.UnEquipped.Invoke();
                         break;
                 }
             };
@@ -151,7 +145,7 @@ namespace Inventory.Main
         
         private void EquipUsable(IUsable usable)
         {
-            UsableSlot slot = usables[usable.SlotType];
+            UsableSlot slot = Usables[usable.SlotType];
             
             slot.Switch(usable);
         }
@@ -159,14 +153,14 @@ namespace Inventory.Main
         //used for Equipping characters that don't have bags like NPCs
         protected void EquipUsableSlot(UsableSlotType usableSlotType)
         {
-            UsableSlot slot = usables[usableSlotType];
+            UsableSlot slot = Usables[usableSlotType];
             
             slot.Switch(slot.Adapter?.Gear);
         }
         
         private void EquipWearable(IWearable wearable)
         {
-            WearableSlot slot = wearables[wearable.SlotType];
+            WearableSlot slot = Wearables[wearable.SlotType];
             
             slot.Switch(wearable);
         }
@@ -200,7 +194,7 @@ namespace Inventory.Main
         
         private void UnEquipUsable(IUsable usable)
         {
-            UsableSlot slot = usables[usable.SlotType];
+            UsableSlot slot = Usables[usable.SlotType];
 
             //make sure we're unEquipping the same item
             if (slot.Adapter?.Item?.Id != usable.Id)
@@ -216,7 +210,7 @@ namespace Inventory.Main
         
         private void UnEquipWearable(IWearable wearable)
         {
-            WearableSlot slot = wearables[wearable.SlotType];
+            WearableSlot slot = Wearables[wearable.SlotType];
 
             //make sure we're unEquipping the same item
             if (slot.Adapter?.Item?.Id != wearable.Id)
@@ -232,14 +226,14 @@ namespace Inventory.Main
 
         public void UnEquipUsableSlot(UsableSlotType slotType)
         {
-            UsableSlot slot = usables[slotType];
+            UsableSlot slot = Usables[slotType];
             
             slot.Switch(null);
         }
         
         public void UnEquipWearableSlot(WearableSlotType slotType)
         {
-            WearableSlot slot = wearables[slotType];
+            WearableSlot slot = Wearables[slotType];
             
             slot.Switch(null);
         }
@@ -252,7 +246,7 @@ namespace Inventory.Main
         
         public void UnEquipAllUsables()
         {
-            foreach (var slot in usables.Values)
+            foreach (var slot in Usables.Values)
             {
                 slot.Switch(null);
             }
@@ -260,7 +254,7 @@ namespace Inventory.Main
         
         public void UnEquipAllWearables()
         {
-            foreach (var slot in wearables.Values)
+            foreach (var slot in Wearables.Values)
             {
                 slot.Switch(null);
             }
@@ -343,7 +337,7 @@ namespace Inventory.Main
 
         public bool TryUse(UsableSlotType slotType, UsageType usageType = UsageType.Primary)
         {
-            UsableSlot slot = usables[slotType];
+            UsableSlot slot = Usables[slotType];
 
             if (!slot.IsEquipped) return false;
 
@@ -359,7 +353,7 @@ namespace Inventory.Main
         
         public bool TryStop(UsableSlotType slotType, UsageType usageType = UsageType.Primary)
         {
-            UsableSlot slot = usables[slotType];
+            UsableSlot slot = Usables[slotType];
 
             if (!slot.IsEquipped) return false;
 
