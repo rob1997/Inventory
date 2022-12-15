@@ -82,6 +82,14 @@ namespace Inventory.Editor
 
             UsableSlot slot = pair.Value;
 
+            EditorGUI.BeginDisabledGroup(true);
+            
+            EditorGUILayout.LabelField($"State : {Utils.GetDisplayName(slot.State.ToString())}");
+            
+            EditorGUI.EndDisabledGroup();
+            
+            EditorGUILayout.Space();
+            
             if (slot.controller == null) slot.controller = _controller;
 
             slot.EquipBone = (Transform) EditorGUILayout.ObjectField(Utils.GetDisplayName(nameof(slot.EquipBone)),
